@@ -1,0 +1,17 @@
+# English strings go here for Rails i18n
+zh:
+  menu_dingtalk: 钉钉设置
+  label_dingtalk_login: 钉钉扫码登陆
+
+  settings_corp_id: 企业ID（CorpId）
+  settings_corp_secret: 企业Secret
+  settings_appid: 应用ID（appid）
+  settings_appsecret: 应用Secret（appsecret）
+  settings_agentid: 应用AgentId
+  settings_redirect: 登录回调地址（redirect url）
+
+  user_dingtalk_union_id: 钉钉UnionID
+  user_dingtalk_user_id: 钉钉UserID
+
+  flash_dingtalk_bind: 您的钉钉账号还未绑定扫码，请尽快用redmine账户正常登陆，将自动绑定（等待时间长可能造成绑定失效）
+  flash_dingtalk_autologin_error: 您的钉钉账号未能自动登录成功，请联系管理员检查相关配置

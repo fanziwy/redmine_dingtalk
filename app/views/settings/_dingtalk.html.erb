@@ -1,0 +1,24 @@
+<p>
+<label><%= l(:settings_corp_id) %></label>
+<%= text_field_tag 'settings[dingtalk_corp_id]', @settings["dingtalk_corp_id"], :size => 60 %>
+</p>
+<p>
+<label><%= l(:settings_corp_secret) %></label>
+<%= text_field_tag 'settings[dingtalk_corp_secret]', @settings["dingtalk_corp_secret"], :size => 60 %>
+</p>
+<p>
+  <label><%= l(:settings_appid) %></label>
+  <%= text_field_tag 'settings[dingtalk_appid]', @settings["dingtalk_appid"], :size => 60 %>
+</p>
+<p>
+  <label><%= l(:settings_appsecret) %></label>
+  <%= text_field_tag 'settings[dingtalk_appsecret]', @settings["dingtalk_appsecret"], :size => 60 %>
+</p>
+<p>
+  <label><%= l(:settings_agentid) %></label>
+  <%= text_field_tag 'settings[dingtalk_agentid]', @settings["dingtalk_agentid"], :size => 60 %>
+</p>
+<p>
+  <label><%= l(:settings_redirect) %></label>
+  <%= text_field_tag 'settings[dingtalk_redirect]', @settings["dingtalk_redirect"], :size => 60 %>
+</p>

@@ -1,0 +1,72 @@
+<!--控制代码，判断是否需要加载扫码-->
+<% begin %>
+<% appid = Setting["plugin_redmine_dingtalk"]["dingtalk_appid"] %>
+<% appsecret = Setting["plugin_redmine_dingtalk"]["dingtalk_appsecret"] %>
+<% redirect_url = Setting["plugin_redmine_dingtalk"]["dingtalk_redirect"] %>
+<% rescue %>
+  <% return %>
+<% end %>
+<% if appid.blank? || appsecret.blank? || redirect_url.blank? %>
+  <% return %>
+<% end %>
+<% corpid = Setting["plugin_redmine_dingtalk"]["dingtalk_corp_id"] %>
+<% unless corpid.blank? %>
+<!--加入钉钉扫码js-->
+<script src="https://g.alicdn.com/dingding/h5-dingtalk-login/0.21.0/ddlogin.js"></script>
+<script src="https://g.alicdn.com/dingding/dingtalk-jsapi/3.0.25/dingtalk.open.js"></script>
+<div id="dingding_qr_login" style="text-align:center;display:none;">
+    <div id="login_container" ></div>
+    <span><%= l(:label_dingtalk_login) %></spna>
+</div>
+<script>
+    function isDingTalkBrowser() {
+        return /DingTalk/.test(navigator.userAgent);
+    }
+    if(isDingTalkBrowser()){
+        if (window.location.href.indexOf('authCode') === -1) {
+            dd.ready(function() {
+                dd.runtime.permission.requestAuthCode({
+                    corpId: "<%= corpid %>", // 企业id
+                    onSuccess: function (info) {
+                            code = info.code
+                            var authLoginUrl = '<%= signin_url %>?authCode=' + code + '&redirect_uri=' + '<%= redirect_url %>';
+                            <% unless params[:back_url].blank? %>
+                                authLoginUrl = '<%= request.url %>&authCode=' + code + '&redirect_uri=' + '<%= redirect_url %>';
+                            <% end %>
+                            window.location.href=authLoginUrl 
+                    }});
+            });
+        }
+    }
+    else{
+        document.getElementById('dingding_qr_login').style.display = 'block';
+        window.DTFrameLogin(
+            {
+                id: 'login_container',
+                width: 300,
+                height: 300,
+            },
+            {
+                redirect_uri: encodeURIComponent('<%= redirect_url %>'),
+                client_id: '<%= appid %>',
+                scope: 'openid',
+                response_type: 'code',
+                state: 'DingTalkSTATE',
+                prompt: 'consent',
+            },
+            (loginResult) => {
+                const {redirectUrl, authCode, state} = loginResult;
+                // 这里可以直接进行重定向
+                window.location.href = redirectUrl;
+                // 也可以在不跳转页面的情况下，使用code进行授权
+                console.log(authCode);
+            },
+            (errorMsg) => {
+                // 这里一般需要展示登录失败的具体原因,可以使用toast等轻提示
+                console.error(`errorMsg of errorCbk: ${errorMsg}`);
+            },
+        );
+    }
+    
+</script>
+<% end %>
