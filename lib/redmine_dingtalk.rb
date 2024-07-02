@@ -18,7 +18,7 @@ module DingtalkMethods
   end
 
   def get_token
-    access_token = Rails.cache.fetch('dingtalk_access_token',expires_in:10) do
+    access_token = Rails.cache.fetch('dingtalk_access_token',expires_in:6000) do
       get_api_token
     end
     return access_token
