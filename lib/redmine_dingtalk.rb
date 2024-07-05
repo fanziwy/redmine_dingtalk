@@ -23,6 +23,25 @@ module DingtalkMethods
     end
     return access_token
   end
+
+  def get_assigned_to(assigned_to)
+    if(assigned_to)
+      if(assigned_to.login.present?)
+        return assigned_to.dingtalk_union_id ? [assigned_to.dingtalk_union_id] :[]
+      else
+        group = Group.find(assigned_to.id)
+        users = group.users
+        executorIds = []
+				users.each do |user|
+					unless user.dingtalk_union_id.blank?
+						executorIds.push(user.dingtalk_union_id)
+					end
+				end
+        return executorIds
+      end
+    end
+    return []
+  end
 end
 # patches
 require File.expand_path('../redmine_dingtalk/patches/issues_controller_patch', __FILE__)

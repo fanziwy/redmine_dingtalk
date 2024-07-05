@@ -48,7 +48,7 @@ module RedmineDingtalk
 				issue_title = @issue.project.name
 				issue_url =  Setting.protocol + "://" + Setting.host_name + "/issues/#{@issue.id}"
 				issue_app_url = "dingtalk://dingtalkclient/page/link?url=#{Addressable::URI.encode(issue_url)}&pc_slide=true"
-				executorIds = @issue.assigned_to ? [@issue.assigned_to.dingtalk_union_id] : []
+				executorIds = get_assigned_to(@issue.assigned_to)
 				data = {
 					"subject" => "#{@issue.tracker} ##{@issue.id}: #{@issue.subject}",
 					"description" => @issue.description,
