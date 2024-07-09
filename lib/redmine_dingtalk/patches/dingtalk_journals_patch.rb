@@ -7,9 +7,20 @@ module RedmineDingtalk
 		  require 'net/https'
 		  
 		  included do
-			after_create :send_messages_after_create_journal
+			after_commit :send_messages_after_create_journal
 		  end
 		  include DingtalkMethods
+
+		  def extract_mentions(issue)
+			description = issue.description || ''
+			notes = issue.notes || ''
+			text = "#{description} #{notes}"
+			# 正则表达式匹配提及的用户名
+			mentions = text.scan(/@(\w+)/).flatten
+			# 根据用户名查找用户
+			User.where(:login => mentions).to_a
+		  end
+
 		  # 用钉钉发送 
 		  def send_by_dingtalk
 			agent_id = Setting["plugin_redmine_dingtalk"]["dingtalk_agentid"]
@@ -27,7 +38,8 @@ module RedmineDingtalk
 
 				to_users = @issue.notified_users
 				cc_users = @issue.notified_watchers - to_users
-				notify_users = to_users + cc_users
+				mi_users = extract_mentions(@issue) - to_users - cc_users
+				notify_users = to_users + cc_users + mi_users
 
 				participantIds = []
 				notified_ids = ''

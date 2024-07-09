@@ -29,8 +29,8 @@ module RedmineDingtalk
           end
           to_users = @issue.notified_users
           cc_users = @issue.notified_watchers - to_users
-          notify_users = to_users + cc_users
-
+          mi_users = @issue.notified_mentions - to_users - cc_users
+				  notify_users = to_users + cc_users + mi_users
           
           participantIds = []
           notified_ids = ''
