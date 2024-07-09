@@ -11,16 +11,6 @@ module RedmineDingtalk
 		  end
 		  include DingtalkMethods
 
-		  def extract_mentions(issue)
-			description = issue.description || ''
-			notes = issue.notes || ''
-			text = "#{description} #{notes}"
-			# 正则表达式匹配提及的用户名
-			mentions = text.scan(/@(\w+)/).flatten
-			# 根据用户名查找用户
-			User.where(:login => mentions).to_a
-		  end
-
 		  # 用钉钉发送 
 		  def send_by_dingtalk
 			agent_id = Setting["plugin_redmine_dingtalk"]["dingtalk_agentid"]

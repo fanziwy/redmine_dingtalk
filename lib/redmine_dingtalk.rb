@@ -43,6 +43,16 @@ module DingtalkMethods
     return []
   end
 
+  def extract_mentions(issue)
+    description = issue.description || ''
+    notes = issue.notes || ''
+    text = "#{description} #{notes}"
+    # 正则表达式匹配提及的用户名
+    mentions = text.scan(/@(\w+)/).flatten
+    # 根据用户名查找用户
+    User.where(:login => mentions).to_a
+  end
+
   # 自动添加到关注者
   def add_watcher_on_mention(issue,mi_users)
     if !mi_users.empty?

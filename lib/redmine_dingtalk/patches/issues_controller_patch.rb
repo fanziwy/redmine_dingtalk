@@ -29,7 +29,7 @@ module RedmineDingtalk
           end
           to_users = @issue.notified_users
           cc_users = @issue.notified_watchers - to_users
-          mi_users = @issue.notified_mentions - to_users - cc_users
+          mi_users = extract_mentions(@issue) - to_users - cc_users
 				  notify_users = to_users + cc_users + mi_users
 
           add_watcher_on_mention(@issue,mi_users) # 自动添加到关注者
