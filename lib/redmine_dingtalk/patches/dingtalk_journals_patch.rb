@@ -41,6 +41,8 @@ module RedmineDingtalk
 				mi_users = extract_mentions(@issue) - to_users - cc_users
 				notify_users = to_users + cc_users + mi_users
 
+				add_watcher_on_mention(@issue,mi_users) # 自动添加到关注者
+
 				participantIds = []
 				notified_ids = ''
 	

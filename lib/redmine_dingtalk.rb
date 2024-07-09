@@ -42,6 +42,15 @@ module DingtalkMethods
     end
     return []
   end
+
+  # 自动添加到关注者
+  def add_watcher_on_mention(issue,mi_users)
+    if !mi_users.empty?
+      mi_users.each do |user|
+        issue.watchers.create(:user => user) unless issue.watchers.exists?(:user_id => user.id)
+      end
+    end
+  end
 end
 # patches
 require File.expand_path('../redmine_dingtalk/patches/issues_controller_patch', __FILE__)
