@@ -61,6 +61,148 @@ module DingtalkMethods
       end
     end
   end
+
+  # 用钉钉发送 
+  def send_by_dingtalk(issue)
+    agent_id = Setting["plugin_redmine_dingtalk"]["dingtalk_agentid"]
+    if agent_id.blank?
+      return
+    end
+    begin
+      operatorId = issue.author.dingtalk_union_id
+      if issue.dingtalk_task_id.present? && issue.journals.last.user.dingtalk_union_id.present?
+        operatorId = issue.journals.last.user.dingtalk_union_id
+      end
+
+      if operatorId.blank?
+        return
+      end
+
+      token = get_token
+      if token.blank?
+        return
+      end
+
+      to_users = issue.notified_users
+      cc_users = issue.notified_watchers - to_users
+      mi_users = extract_mentions(issue) - to_users - cc_users
+      notify_users = to_users + cc_users + mi_users
+
+      add_watcher_on_mention(issue,mi_users) # 自动添加到关注者
+
+      participantIds = []
+      notified_ids = ''
+
+      notify_users.each do |user|
+        unless user.dingtalk_union_id.blank?
+          participantIds.push(user.dingtalk_union_id)
+        end
+        unless user.dingtalk_user_id.blank?
+          notified_ids.concat(user.dingtalk_user_id).concat(",")
+        end
+      end
+
+      
+      issue_title = issue.project.name
+      issue_url =  Setting.protocol + "://" + Setting.host_name + "/issues/#{issue.id}"
+      issue_app_url = "dingtalk://dingtalkclient/page/link?url=#{Addressable::URI.encode(issue_url)}&pc_slide=true"
+      executorIds = get_assigned_to(issue.assigned_to)
+
+      data = {
+        "subject" => "#{issue.tracker} ##{issue.id}: #{issue.subject}",
+        "description" => issue.description,
+        "dueTime" => (issue.due_date ? issue.due_date.to_time.to_i * 1000 : nil),
+        "executorIds" => executorIds,
+        "participantIds" => participantIds,
+      }
+
+      if issue.dingtalk_task_id.present?
+        data.merge!({
+          "done" =>  issue.status.is_closed,
+        })
+        task_post_url = "https://api.dingtalk.com/v1.0/todo/users/#{operatorId}/tasks/#{issue.dingtalk_task_id}?operatorId=#{operatorId}"
+      else
+        data.merge!({
+          "sourceId" => issue.id,
+          "creatorId" => operatorId,
+          "detailUrl" => {
+              "appUrl" => issue_app_url,
+              "pcUrl" => issue_app_url,
+            },
+          "priority" =>(issue.priority_id>4 ? 40 : issue.priority_id * 10),
+        })
+        task_post_url = "https://api.dingtalk.com/v1.0/todo/users/#{operatorId}/tasks?operatorId=#{operatorId}"
+      end
+
+      url = URI.parse(task_post_url)  
+      http = Net::HTTP.new(url.host,url.port)
+      http.use_ssl = true
+      if issue.dingtalk_task_id.present?
+        req = Net::HTTP::Put.new(
+          url.request_uri, 
+          'Content-Type' => 'application/json',
+          'x-acs-dingtalk-access-token' => token
+          )
+      else
+        req = Net::HTTP::Post.new(
+            url.request_uri, 
+            'Content-Type' => 'application/json',
+            'x-acs-dingtalk-access-token' => token
+            )
+      end
+      req.body = data.to_json
+      res = http.request(req)
+      if issue.dingtalk_task_id.blank?
+        res_josn = JSON.parse(res.body)
+        # 获得id
+        dingtalk_task_id = res_josn["id"]
+        if !dingtalk_task_id.blank?
+          Issue.where(id: issue.id).update_all(dingtalk_task_id: dingtalk_task_id)
+        end
+      end
+      
+      if notified_ids.present?
+        msg_content = issue.description
+        msg_author = "#{issue.author}"
+        if issue.dingtalk_task_id.present?
+          msg_content = issue.journals.last.notes
+          msg_author = "#{issue.journals.last.user}"
+        end
+        data = {
+          "agent_id" => agent_id,
+          "userid_list" => notified_ids,
+          "msg" => {
+          "msgtype" => "oa",
+          "oa" => {
+            "message_url" => issue_app_url,
+            "pc_message_url" => issue_app_url,
+            "head" => {
+            "bgcolor" => "FFBBBBBB",
+                   "text" => issue_title,
+            },
+            "body" => {
+            "title" => "#{issue.tracker} ##{issue.id}: #{issue.subject}",
+            "content" => msg_content,
+            "form"=>[
+              {"key":"创建者：","value": "#{issue.author}"},
+              {"key":"状态：","value": "#{issue.status}"},
+              {"key":"指派给：","value": "#{issue.assigned_to ? "#{issue.assigned_to}" : "-"}"},
+            ],
+            "author" => msg_author,
+            },
+          }
+          }
+        }.to_json
+        url = URI.parse("https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2?access_token=#{token}")  
+        http = Net::HTTP.new(url.host,url.port)
+        http.use_ssl = true
+        req = Net::HTTP::Post.new(url.request_uri, 'Content-Type' => 'application/json')
+        req.body = data
+        res = http.request(req)
+      end
+    rescue
+    end
+  end
 end
 # patches
 require File.expand_path('../redmine_dingtalk/patches/issues_controller_patch', __FILE__)
