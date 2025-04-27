@@ -2,7 +2,7 @@ Redmine::Plugin.register :redmine_dingtalk do
   name 'Redmine Dingtalk plugin'
   author 'Andy'
   description '钉钉登陆、待办、工作通知'
-  version '1.0.1'
+  version '1.0.2'
   url 'https://github.com/fanziwy/redmine_dingtalk'
   author_url 'https://github.com/fanziwy'
   

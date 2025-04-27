@@ -106,6 +106,9 @@ module DingtalkMethods
       issue_title = issue.project.name
       issue_url =  Setting.protocol + "://" + Setting.host_name + "/issues/#{issue.id}"
       issue_app_url = "dingtalk://dingtalkclient/page/link?url=#{Addressable::URI.encode(issue_url)}&pc_slide=true"
+      corpid = Setting["plugin_redmine_dingtalk"]["dingtalk_corp_id"]
+      appid = Setting["plugin_redmine_dingtalk"]["dingtalk_appid"]
+      issue_pc_url = "dingtalk://dingtalkclient/action/openapp?corpid=#{corpid}&container_type=work_platform&app_id=#{appid}&redirect_type=jump&redirect_url=#{Addressable::URI.encode(issue_url)}"
       executorIds = get_assigned_to(issue.assigned_to)
 
       data = {
@@ -127,7 +130,7 @@ module DingtalkMethods
           "creatorId" => operatorId,
           "detailUrl" => {
               "appUrl" => issue_app_url,
-              "pcUrl" => issue_app_url,
+              "pcUrl" => issue_pc_url,
             },
           "priority" =>(issue.priority_id>4 ? 40 : issue.priority_id * 10),
         })
@@ -175,7 +178,7 @@ module DingtalkMethods
           "msgtype" => "oa",
           "oa" => {
             "message_url" => issue_app_url,
-            "pc_message_url" => issue_app_url,
+            "pc_message_url" => issue_pc_url,
             "head" => {
             "bgcolor" => "FFBBBBBB",
                    "text" => issue_title,
